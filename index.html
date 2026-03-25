@@ -301,19 +301,8 @@
     <div class="particles-overlay"></div>
     <div class="gold-dust" id="dust-field"></div> <div class="overlay"></div>
 
-    <!-- Background Music (YouTube Shorts Video) -->
-    <div style="position: fixed; top: -100px; left: -100px; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
-        <iframe 
-            id="youtubePlayer"
-            width="100" 
-            height="100" 
-            src="https://www.youtube.com/embed/ZLodIVm7D6U?enablejsapi=1&autoplay=1&loop=1&playlist=ZLodIVm7D6U&mute=0" 
-            title="YouTube video player" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-        </iframe>
-    </div>
+    <!-- YouTube Player Container -->
+    <div id="player"></div>
 
     <section class="section">
         <div class="hero reveal">
@@ -442,21 +431,48 @@
             }, 1200);
         }
 
-        // YouTube Music Control Logic
-        function playMusic() {
-            const iframe = document.getElementById('youtubePlayer');
-            // Re-trigger the iframe src to force play on interaction
-            const currentSrc = iframe.src;
-            iframe.src = currentSrc.replace('autoplay=1', 'autoplay=1');
-            
-            // Modern API call to play
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        // YouTube IFrame API Setup
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '0',
+                width: '0',
+                videoId: 'ZLodIVm7D6U',
+                playerVars: {
+                    'autoplay': 1,
+                    'loop': 1,
+                    'playlist': 'ZLodIVm7D6U',
+                    'playsinline': 1, // Critical for mobile
+                    'controls': 0,
+                    'showinfo': 0,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
         }
 
-        // Try to play on first click anywhere if browser blocks auto-play
-        document.addEventListener('click', () => {
-            playMusic();
-        }, { once: true });
+        function onPlayerReady(event) {
+            // Set volume to 50% immediately
+            event.target.setVolume(50);
+
+            // Browsers block autoplay with sound, so we wait for interaction
+            document.addEventListener('click', () => {
+                event.target.playVideo();
+                event.target.unMute();
+            }, { once: true });
+            
+            document.addEventListener('touchstart', () => {
+                event.target.playVideo();
+                event.target.unMute();
+            }, { once: true });
+        }
     </script>
 </body>
 </html>
